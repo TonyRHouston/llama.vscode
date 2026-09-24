@@ -25,9 +25,17 @@ suite('agent security', () => {
             'cd .. && git push --force',
             'ls\nrm -rf ~',
             'cat ${HOME}/.ssh/id_ed25519',
+            'man -P "sh -c id" ls',
+            'man --pager=id ls',
+            'find . -fprint0 /tmp/out',
+            "find . '-delete'",
+            'cat ~/.ssh/id_ed25519',
+            'grep -r key /etc',
+            'ls ../..',
+            'cat --file=/etc/passwd',
         ];
         for (const c of mustAsk) assert.strictEqual(Utils.isModifyingCommand(c), true, `should ask: ${JSON.stringify(c)}`);
-        for (const c of ['ls -la', 'cat README.md', 'grep -rn TODO src', 'find . -name "*.ts"', 'pwd', 'echo hello']) {
+        for (const c of ['ls -la', 'cat README.md', 'grep -rn TODO src', 'find . -name x.ts', 'pwd', 'man ls', 'echo hello']) {
             assert.strictEqual(Utils.isModifyingCommand(c), false, `should stay auto-approvable: ${c}`);
         }
     });
@@ -47,6 +55,17 @@ suite('agent security', () => {
         assert.strictEqual(Utils.isInsideWorkspace(path.join(root, '../../.bashrc'), [root]), false);
         assert.strictEqual(Utils.isInsideWorkspace(path.join(os.homedir(), '.ssh/id_ed25519'), [root]), false);
         assert.strictEqual(Utils.isInsideWorkspace(root + '-sibling/file', [root]), false, 'a prefix match is not containment');
+    });
+
+    test('workspace containment follows symlinks', function () {
+        if (process.platform === 'win32') this.skip();
+        const fs = require('fs');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-link-'));
+        fs.symlinkSync(os.homedir(), path.join(root, 'home'));
+        try {
+            assert.strictEqual(Utils.isInsideWorkspace(path.join(root, 'home/.bashrc'), [root]), false);
+            assert.strictEqual(Utils.isInsideWorkspace(path.join(root, 'new/dir/file.ts'), [root]), true);
+        } finally { fs.rmSync(root, { recursive: true, force: true }); }
     });
 
     test('hook scripts ignore tool-argument keys that are not plain identifiers', async () => {
@@ -72,6 +91,19 @@ suite('agent security: reads outside the workspace', () => {
         assert.strictEqual(result, Utils.MSG_NO_USER_PERMISSION);
         assert.match(asked, /outside the workspace/);
     });
+
+    test('rename_symbol, edit_file and delete_file refuse paths outside the workspace without prompting', async () => {
+        const { Tools } = await import('../../tools');
+        const tools: any = new Tools({ configuration: { MAX_CHARS_TOOL_RETURN: 10000 } } as any);
+        let asked = 0;
+        tools.confirmToolPermission = async () => { asked++; return [true, false]; };
+        const outside = path.join(os.homedir(), '.bashrc');
+        assert.match(await tools.renameSymbol(JSON.stringify({ symbol: 'a', newName: 'b', lineContent: 'a', filePath: outside })), /outside|not found/);
+        assert.match(await tools.renameSymbol(JSON.stringify({ symbol: 'a', newName: 'b', lineContent: 'a', url: 'untitled:x' })), /Only file URLs/);
+        assert.match(await tools.editFile(JSON.stringify({ file_path: outside, search: 'a', replace: 'b' })), /outside/);
+        assert.match(String(await tools.deleteFile(JSON.stringify({ file_path: outside }))), /outside|not allowed|not found/i);
+        assert.strictEqual(asked, 0);
+    });
 });
 
 suite('agent security: settings a workspace must not control', () => {
@@ -82,6 +114,7 @@ suite('agent security: settings a workspace must not control', () => {
         for (const key of ['tool_permit_some_terminal_commands', 'tool_permit_file_changes', 'tool_permit_file_delete',
             'tool_custom_eval_tool_code', 'tool_custom_eval_tool_enabled', 'tools_custom', 'hooks_folder',
             'telegram_api_token', 'telegram_bot_enabled', 'telegram_bot_users', 'launch_completion',
+            'tool_custom_tool_enabled', 'tool_custom_tool_source', 'agent_rules',
             'endpoint', 'endpoint_chat', 'endpoint_tools', 'endpoint_embeddings', 'api_key', 'api_key_chat']) {
             assert.strictEqual(props[`llama-vscode.${key}`]?.scope, 'machine', key);
         }

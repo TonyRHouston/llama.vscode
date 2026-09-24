@@ -220,11 +220,22 @@ export class Utils {
         // Only a single, plain command can be auto-approved: any chaining, piping, redirection,
         // substitution, grouping, variable expansion, escape or newline could hide a modifying
         // command behind a read-only first word (e.g. "ls; rm -rf ~", "echo x >> ~/.bashrc").
-        if (/[;&|`$<>(){}\\\n\r]/.test(command)) {
+        if (/[;&|`$<>(){}\\\n\r"']/.test(command)) {
             return true;
         }
         // find can delete or run arbitrary programs on its own.
-        if (/^find\b.*\s-(delete|exec|execdir|ok|okdir|fprint|fprintf|fls)\b/.test(normalizedCmd)) {
+        if (/^find\b.*\s-(delete|exec|execdir|ok|okdir|fprint0?|fprintf|fls)(\s|$)/.test(normalizedCmd)) {
+            return true;
+        }
+        // man can run an arbitrary pager/formatter.
+        if (/^man\b.*\s(-[a-z]*[phl]|--pager|--html|--local-file)/.test(normalizedCmd)) {
+            return true;
+        }
+        // A "read-only" command may still read outside the workspace (home, absolute paths, "..").
+        if (command.trim().split(/\s+/).slice(1).some(arg => {
+            const a = arg.replace(/^-[^=]*=/, '');
+            return a.startsWith('~') || a.startsWith('/') || /^[a-z]:[\\/]/i.test(a) || a.split(/[\\/]/).includes('..');
+        })) {
             return true;
         }
 
@@ -404,14 +415,25 @@ export class Utils {
     } 
 
     // True when absolutePath resolves inside one of the open workspace folders (or extraRoots).
-    // Uses path.relative on resolved paths, so ".." segments and relative inputs cannot escape.
+    // Uses path.relative on real (symlink-resolved) paths, so "..", relative inputs and symlinks cannot escape.
     static isInsideWorkspace = (absolutePath: string, extraRoots: string[] = []): boolean => {
-        const resolved = path.resolve(absolutePath);
+        const resolved = Utils.realpathLoose(absolutePath);
         const roots = [...(vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath), ...extraRoots];
         return roots.some(root => {
-            const rel = path.relative(path.resolve(root), resolved);
+            const rel = path.relative(Utils.realpathLoose(root), resolved);
             return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
         });
+    }
+
+    // Resolve symlinks; for a path that does not exist yet, resolve its nearest existing parent.
+    static realpathLoose = (p: string): string => {
+        let head = path.resolve(p), tail = "";
+        for (;;) {
+            try { return path.join(fs.realpathSync.native(head), tail); } catch { /* not there yet */ }
+            const parent = path.dirname(head);
+            if (parent === head) return path.resolve(p);
+            tail = path.join(path.basename(head), tail); head = parent;
+        }
     }
 
     // Quote a string for a POSIX shell so it is passed through literally (no expansion).

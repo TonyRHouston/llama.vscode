@@ -254,6 +254,7 @@ export class Tools {
         let uri: vscode.Uri;
         if (params.url) {
             uri = vscode.Uri.parse(params.url);
+            if (uri.scheme !== 'file') return "Only file URLs can be renamed in.";
         } else if (params.filePath) {
             const absolutePath = Utils.getAbsolutFilePath(params.filePath);
             if (!absolutePath) {
@@ -262,6 +263,15 @@ export class Tools {
             uri = vscode.Uri.file(absolutePath);
         } else {
             return "Either 'url' or 'filePath' must be provided.";
+        }
+        if (!this.isEditAllowed(uri.fsPath)) return `Error: File "${uri.fsPath}" is outside all workspace folders and outside auto memory folder.`;
+        if (!this.app.configuration.tool_permit_file_changes) {
+            let [yesApply, yesDontAsk] = await this.confirmToolPermission(`Do you permit renaming ${params.symbol} to ${params.newName} (may change several files)?`)
+            if (yesDontAsk) {
+                this.app.configuration.updateConfigValue("tool_permit_file_changes", true)
+                vscode.window.showInformationMessage("Setting tool_permit_file_changes is set to true.")
+            }
+            if (!yesApply) return Utils.MSG_NO_USER_PERMISSION;
         }
 
         try {
@@ -286,7 +296,7 @@ export class Tools {
             const lineText = document.lineAt(targetLine).text;
             const startIndex = lineText.indexOf(params.symbol);
             if (startIndex === -1) {
-                return `Symbol '${params.symbol}' not found in the line: ${lineText}`;
+                return `Symbol '${params.symbol}' not found in the line containing: ${lineContent}`;
             }
 
             const position = new vscode.Position(targetLine, startIndex);
@@ -380,14 +390,8 @@ export class Tools {
 
         try {
             const absolutePath = Utils.getAbsolutFilePath(filePath);
-            // Restrict deletion to project folder
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            if (!workspaceFolders || workspaceFolders.length === 0) {
-                return "Cannot delete file: no workspace folder open.";
-            }
-            const workspaceRoot = workspaceFolders[0].uri.fsPath;
-            const relativePath = path.relative(workspaceRoot, absolutePath);
-            if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+            // Restrict deletion to the workspace folders and the auto memory folder
+            if (!absolutePath || !Utils.isInsideWorkspace(absolutePath, this.autoMemoryRoots())) {
                 return `Deletion not allowed: ${filePath} is outside the project folder.`;
             }
             if (!this.app.configuration.tool_permit_file_delete){  
@@ -449,6 +453,7 @@ export class Tools {
         if (!filePath) return "The file is not provided.";
         
         try {
+            if (!this.isEditAllowed(filePath)) return `Error: File "${filePath}" is outside all workspace folders and outside auto memory folder.`;
             if (!this.app.configuration.tool_permit_file_changes){  
                 let [yesApply, yesDontAsk] = await this.confirmToolPermission(`Do you permit file ${filePath} to be changed?`)
                 if (yesDontAsk) {
@@ -457,7 +462,6 @@ export class Tools {
                 }
                 if (!yesApply) return Utils.MSG_NO_USER_PERMISSION;
             }
-            if (!this.isEditAllowed(filePath)) return `Error: File "${filePath}" is outside all workspace folders and outside auto memory folder.`;
             let resultEdit = await Utils.findReplaceFile(filePath, search, replace, replaceAll, this.fileReadTimestamps)
             if (resultEdit == UI_TEXT_KEYS.fileUpdated &&  this.app.configuration.rag_enabled && fs.existsSync(filePath)) {
                 this.app.chatContext.udpateFileIndexing(filePath, fs.readFileSync(filePath, 'utf-8'))

@@ -1144,6 +1144,7 @@
           "description": "The list of envs, which could be selected"
         },
         "llama-vscode.agent_rules": {
+          "scope": "machine",
           "type": "string",
           "default": "",
           "description": "Path to a file (md format or plain text) with user defined rules for the agent, which will be appended to the system instructions. Path could be absolute or relative to the workspace root. Example: coding-rules.md (provided the file is in the project root) or /home/user/coding-rules.md"
@@ -1552,6 +1553,7 @@
           "description": "Enable/disable tool ask_user"
         },
         "llama-vscode.tool_custom_tool_enabled": {
+          "scope": "machine",
           "type": "boolean",
           "default": false,
           "description": "Enable/disable tool custom_tool"
@@ -1582,6 +1584,7 @@
           "description": "Description for the custom_tool, which will be sent to the AI. The result of the tool execution will be the content of file or web page from property custom_tool_source."
         },
         "llama-vscode.tool_custom_tool_source": {
+          "scope": "machine",
           "type": "string",
           "default": "https://news.smol.ai/",
           "description": "The long name of a text file (for example c:\\ai\\llms_basics.txt) or URL of a web page (should start with 'http' i.e. https://news.test.com), which content will be returned by the custom_tool when called. Not all web pages are parsed correctly. "
