@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import {Application} from "./application";
+import { ModelwirePanel } from './modelwire-panel';
 
 let app: Application
 export function activate(context: vscode.ExtensionContext) {
@@ -34,6 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
     app.architect.registerCommandSelectNextSuggestion(context)
     app.architect.registerCommandSelectPreviousSuggestion(context)
     app.architect.registerLlavaVscodeModelProvider(context)
+    ModelwirePanel.register(context)
     app.architect.init()
 
     

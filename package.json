@@ -122,6 +122,14 @@
         "command": "extension.showLlamaWebview",
         "title": "llama-vscode: Show Llama Agent",
         "icon": "$(window)"
+      },
+      {
+        "command": "llama-vscode.modelwire.setControlKey",
+        "title": "modelwire: Set Control Key"
+      },
+      {
+        "command": "llama-vscode.modelwire.refresh",
+        "title": "modelwire: Refresh Panel"
       }
     ],
     "views": {
@@ -130,6 +138,12 @@
           "id": "llama-vscode.webview",
           "name": "llama-vscode",
           "when": "true",
+          "type": "webview",
+          "icon": "resources/llama-sidebar.svg"
+        },
+        {
+          "id": "llama-vscode.modelwire",
+          "name": "modelwire",
           "type": "webview",
           "icon": "resources/llama-sidebar.svg"
         }
@@ -1722,6 +1736,12 @@
           "type": "boolean",
           "default": false,
           "description": "If true, the prompt sent directly to the agent from the text editor is removed. Only applicable if setting send_prompt_from_editor_enabled is true."
+        },
+        "llama-vscode.modelwire_url": {
+          "type": "string",
+          "default": "http://127.0.0.1:4100",
+          "scope": "machine",
+          "description": "Base URL of the modelwire bridge for the modelwire panel. Machine-scoped: workspace settings cannot change it. The control key is stored in VS Code's secret storage (command: modelwire: Set Control Key)."
         }
       }
     },
