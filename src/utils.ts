@@ -217,6 +217,17 @@ export class Utils {
 
         const normalizedCmd = command.trim().toLowerCase();
 
+        // Only a single, plain command can be auto-approved: any chaining, piping, redirection,
+        // substitution, grouping, variable expansion, escape or newline could hide a modifying
+        // command behind a read-only first word (e.g. "ls; rm -rf ~", "echo x >> ~/.bashrc").
+        if (/[;&|`$<>(){}\\\n\r]/.test(command)) {
+            return true;
+        }
+        // find can delete or run arbitrary programs on its own.
+        if (/^find\b.*\s-(delete|exec|execdir|ok|okdir|fprint|fprintf|fls)\b/.test(normalizedCmd)) {
+            return true;
+        }
+
         // List of modifying command patterns (both Windows and Unix)
         const modifyingPatterns = [
             // File operations
@@ -391,6 +402,20 @@ export class Utils {
         if (matches.trim() == "") matches = "No matches found"
         return matches;
     } 
+
+    // True when absolutePath resolves inside one of the open workspace folders (or extraRoots).
+    // Uses path.relative on resolved paths, so ".." segments and relative inputs cannot escape.
+    static isInsideWorkspace = (absolutePath: string, extraRoots: string[] = []): boolean => {
+        const resolved = path.resolve(absolutePath);
+        const roots = [...(vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath), ...extraRoots];
+        return roots.some(root => {
+            const rel = path.relative(path.resolve(root), resolved);
+            return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+        });
+    }
+
+    // Quote a string for a POSIX shell so it is passed through literally (no expansion).
+    static shellQuote = (text: string): string => "'" + String(text).replace(/'/g, "'\\''") + "'"
 
     static getAbsolutFilePath = (filePath:string): string => {        
         if (path.isAbsolute(filePath)) {

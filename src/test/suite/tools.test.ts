@@ -36,6 +36,9 @@ suite('Tools readFile Function Test Suite', () => {
     setup(() => {
         mockApp = new MockApplication() as unknown as Application;
         tools = new Tools(mockApp);
+        // Reading files outside the workspace now asks the user (no folder is open in the test host);
+        // model an approving user so these tests keep exercising readFile itself.
+        (tools as any).confirmToolPermission = async () => [true, false];
     });
 
     test('should read specific lines from a file', async () => {

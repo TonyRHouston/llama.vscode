@@ -55,6 +55,9 @@ export class Hooks {
         let setVarsScript = "set eventName " + eventName
         setVarsScript += "\nset toolName " + toolName
         for (const [key, value] of dataMap) {
+            // Keys come from the model's tool-call arguments and are spliced into DSL text: only plain
+            // identifiers may pass, or a key with a newline could inject commands (runterminalcommand).
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue
             setVarsScript += "\nset " + key + " getEventInput " + key
         }
         setVarsScript += "\n"

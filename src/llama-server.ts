@@ -1273,7 +1273,9 @@ private createGetSummaryRequestPayload(messages: ChatMessage[], model: string) {
         // }
 
         this.vsCodeCommandTerminal.show(true);
-        this.vsCodeCommandTerminal.sendText(`echo "Executing: ${command}"`);
+        // Everything echoed below is single-quoted: the command text and its output must never be
+        // re-evaluated by the interactive shell (a "$(...)" in a filename would otherwise run).
+        this.vsCodeCommandTerminal.sendText(`echo ${Utils.shellQuote("Executing: " + command)}`);
         try {
             // Execute command programmatically for reliable output
             // Use the user's login shell so PATH and shell startup files are sourced.
@@ -1306,11 +1308,11 @@ private createGetSummaryRequestPayload(messages: ChatMessage[], model: string) {
                 .filter((line: string) => !harmlessTtyWarnings.some(warning => line.includes(warning)))
                 .join('\n');
             if (cleanedStderr) {
-                this.vsCodeCommandTerminal.sendText(`echo "${cleanedStderr.trim()}"`);
+                this.vsCodeCommandTerminal.sendText(`echo ${Utils.shellQuote(cleanedStderr.trim())}`);
             }
             return { stdout, stderr: cleanedStderr };
         } catch (error: any) {
-            this.vsCodeCommandTerminal.sendText(`echo "Command failed: ${error.message}"`);
+            this.vsCodeCommandTerminal.sendText(`echo ${Utils.shellQuote("Command failed: " + error.message)}`);
             // In catch block, error.stderr may also contain these warnings
             const harmlessTtyWarnings = [
                 'cannot set terminal process group',

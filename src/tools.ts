@@ -116,6 +116,8 @@ export class Tools {
             let absolutePath = Utils.getAbsolutFilePath(filePath);
             if (absolutePath == "") return "File not found: " + filePath
             absolutePath = path.resolve(absolutePath) // Make the path unique for this file - no .. in the path
+            const refused = await this.confirmReadOutsideWorkspace(absolutePath, "file");
+            if (refused) return refused;
             const stats = await fs.promises.stat(absolutePath);
             this.fileReadTimestamps.set(absolutePath, stats.mtimeMs);
             uri = vscode.Uri.file(absolutePath);
@@ -191,6 +193,8 @@ export class Tools {
             absolutePath = path.join(workspaceRoot, dirPath);
         }
         try {
+            const refused = await this.confirmReadOutsideWorkspace(absolutePath, "directory");
+            if (refused) return refused;
             return Utils.listDirectoryContents(absolutePath);
         } catch (error) {
             return "Error reading directory: " + dirPath;
@@ -464,21 +468,25 @@ export class Tools {
             throw error;
         }        
     }
+    // Relative paths are resolved (against the first workspace folder, as the edit tools do) before
+    // the check, so "../../.bashrc" can no longer slip past it; auto_memory is allowed too.
     private isEditAllowed = (filePath: string): boolean => {
-        let isAllowed = true;
-        if (path.isAbsolute(filePath)) {
-            const resolvedFilePath = path.resolve(filePath)
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(resolvedFilePath));
-            if (!workspaceFolder) {
-                if (this.app.extensionContext.storageUri?.fsPath){
-                    let auto_memory_folder = path.join(this.app.extensionContext.storageUri?.fsPath, "auto_memory");
-                    auto_memory_folder = path.resolve(auto_memory_folder)
-                    if (!resolvedFilePath.startsWith(auto_memory_folder)) isAllowed = false;
-                } else isAllowed = false; 
-            }
-        }
+        const absolutePath = Utils.getAbsolutFilePath(filePath);
+        if (!absolutePath) return false;
+        return Utils.isInsideWorkspace(absolutePath, this.autoMemoryRoots());
+    }
 
-        return isAllowed
+    private autoMemoryRoots = (): string[] => {
+        const storage = this.app.extensionContext?.storageUri?.fsPath;
+        return storage ? [path.join(storage, "auto_memory")] : [];
+    }
+
+    // Reads outside the workspace (e.g. ~/.ssh) need the user's permission: their content is sent
+    // to the model endpoint. Returns an error message when refused, else undefined.
+    private confirmReadOutsideWorkspace = async (absolutePath: string, kind: string): Promise<string | undefined> => {
+        if (Utils.isInsideWorkspace(absolutePath, this.autoMemoryRoots())) return undefined;
+        const [yesApply] = await this.confirmToolPermission(`Do you permit reading the ${kind} ${absolutePath}? It is outside the workspace, and its content will be sent to the model.`);
+        return yesApply ? undefined : Utils.MSG_NO_USER_PERMISSION;
     }
 
     public editFileDesc = async (args: string) => {

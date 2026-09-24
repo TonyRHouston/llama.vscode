@@ -248,32 +248,38 @@
         "llama-vscode.launch_completion": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting local fim llama.cpp server"
+          "description": "Shell command for starting local fim llama.cpp server",
+          "scope": "machine"
         },
         "llama-vscode.launch_chat": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting local chat llama.cpp server"
+          "description": "Shell command for starting local chat llama.cpp server",
+          "scope": "machine"
         },
         "llama-vscode.launch_embeddings": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting local embeddings llama.cpp server"
+          "description": "Shell command for starting local embeddings llama.cpp server",
+          "scope": "machine"
         },
         "llama-vscode.launch_tools": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting local lools llama.cpp server"
+          "description": "Shell command for starting local lools llama.cpp server",
+          "scope": "machine"
         },
         "llama-vscode.launch_training_completion": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting training a completion (fim) model from the menu"
+          "description": "Shell command for starting training a completion (fim) model from the menu",
+          "scope": "machine"
         },
         "llama-vscode.launch_training_chat": {
           "type": "string",
           "default": "",
-          "description": "Shell command for starting training a chat model from the menu"
+          "description": "Shell command for starting training a chat model from the menu",
+          "scope": "machine"
         },
         "llama-vscode.lora_completion": {
           "type": "string",
@@ -288,22 +294,26 @@
         "llama-vscode.endpoint": {
           "type": "string",
           "default": "",
-          "description": "The URL to be used by the extension for code completion."
+          "description": "The URL to be used by the extension for code completion.",
+          "scope": "machine"
         },
         "llama-vscode.endpoint_chat": {
           "type": "string",
           "default": "",
-          "description": "The URL to be used by the extension for chat with ai."
+          "description": "The URL to be used by the extension for chat with ai.",
+          "scope": "machine"
         },
         "llama-vscode.endpoint_tools": {
           "type": "string",
           "default": "",
-          "description": "The URL to be used by the extension for chat with ai with tools use."
+          "description": "The URL to be used by the extension for chat with ai with tools use.",
+          "scope": "machine"
         },
         "llama-vscode.endpoint_embeddings": {
           "type": "string",
           "default": "",
-          "description": "The URL to be used by the extension for creating embeddings."
+          "description": "The URL to be used by the extension for creating embeddings.",
+          "scope": "machine"
         },
         "llama-vscode.max_parallel_completions": {
           "type": "number",
@@ -1171,27 +1181,32 @@
         "llama-vscode.api_key": {
           "type": "string",
           "default": "",
-          "description": "llama.cpp completion server api key or OpenAI endpoint API key (optional)"
+          "description": "llama.cpp completion server api key or OpenAI endpoint API key (optional)",
+          "scope": "machine"
         },
         "llama-vscode.api_key_chat": {
           "type": "string",
           "default": "",
-          "description": "llama.cpp chat server api key"
+          "description": "llama.cpp chat server api key",
+          "scope": "machine"
         },
         "llama-vscode.api_key_tools": {
           "type": "string",
           "default": "",
-          "description": "llama.cpp AI with tools server api key"
+          "description": "llama.cpp AI with tools server api key",
+          "scope": "machine"
         },
         "llama-vscode.api_key_embeddings": {
           "type": "string",
           "default": "",
-          "description": "llama.cpp embeddings server api key"
+          "description": "llama.cpp embeddings server api key",
+          "scope": "machine"
         },
         "llama-vscode.self_signed_certificate": {
           "type": "string",
           "default": "",
-          "description": "self-signed certificate file - path/to/cert.pem"
+          "description": "self-signed certificate file - path/to/cert.pem",
+          "scope": "machine"
         },
         "llama-vscode.health_check_interval_s": {
           "type": "number",
@@ -1451,7 +1466,8 @@
               }
             }
           },
-          "default": []
+          "default": [],
+          "scope": "machine"
         },
         "llama-vscode.context_custom": {
           "type": "object",
@@ -1475,17 +1491,20 @@
         "llama-vscode.tool_permit_some_terminal_commands": {
           "type": "boolean",
           "default": false,
-          "description": "Permit AI to execute some safe terminal commands, which do not change the environment (no guarantee) "
+          "description": "Permit AI to execute some safe terminal commands, which do not change the environment (no guarantee) ",
+          "scope": "machine"
         },
         "llama-vscode.tool_permit_file_changes": {
           "type": "boolean",
           "default": false,
-          "description": "Permit AI to edit files without user confirmation"
+          "description": "Permit AI to edit files without user confirmation",
+          "scope": "machine"
         },
         "llama-vscode.tool_permit_file_delete": {
           "type": "boolean",
           "default": false,
-          "description": "Permit AI to delete files in project folder without user confirmation"
+          "description": "Permit AI to delete files in project folder without user confirmation",
+          "scope": "machine"
         },
         "llama-vscode.tool_search_source_enabled": {
           "type": "boolean",
@@ -1570,7 +1589,8 @@
         "llama-vscode.tool_custom_eval_tool_enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable/disable tool custom_eval_tool"
+          "description": "Enable/disable tool custom_eval_tool",
+          "scope": "machine"
         },
         "llama-vscode.tool_custom_eval_tool_description": {
           "type": "string",
@@ -1585,7 +1605,8 @@
         "llama-vscode.tool_custom_eval_tool_code": {
           "type": "string",
           "default": "function(input) { return eval(input); }",
-          "description": "The javascript function to be executed when the tool is called. It should have one parameter of type string. When called, the parameter will be the value provided by the AI in the tool property. This is powerful, but could be security risk. Be careful."
+          "description": "The javascript function to be executed when the tool is called. It should have one parameter of type string. When called, the parameter will be the value provided by the AI in the tool property. This is powerful, but could be security risk. Be careful.",
+          "scope": "machine"
         },
         "llama-vscode.tools_max_iterations": {
           "type": "number",
@@ -1660,7 +1681,8 @@
         "llama-vscode.hooks_folder": {
           "type": "string",
           "default": "",
-          "description": "The folder, where the hooks (i.e actions on events like preToolUse, postToolUse, etc.) are stored. Every file with .json suffix is considered hooks file."
+          "description": "The folder, where the hooks (i.e actions on events like preToolUse, postToolUse, etc.) are stored. Every file with .json suffix is considered hooks file.",
+          "scope": "machine"
         },
         "llama-vscode.scripts_folder": {
           "type": "string",
@@ -1705,22 +1727,26 @@
         "llama-vscode.telegram_api_token": {
           "type": "string",
           "default": "",
-          "description": "The Telegram API Key token for your Telegram Bot. How create your bot: in Telegram open bot @BotFather, click Start and execute the command /newbot. There you will see the bot API token."
+          "description": "The Telegram API Key token for your Telegram Bot. How create your bot: in Telegram open bot @BotFather, click Start and execute the command /newbot. There you will see the bot API token.",
+          "scope": "machine"
         },
         "llama-vscode.telegram_bot_enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable/disable Telegram Bot. If enabled and telegram_api_token is provided, the agent prompts could be sent from phones (with telegram message to the bot)."
+          "description": "Enable/disable Telegram Bot. If enabled and telegram_api_token is provided, the agent prompts could be sent from phones (with telegram message to the bot).",
+          "scope": "machine"
         },
         "llama-vscode.telegram_bot_users": {
           "type": "string",
           "default": "",
-          "description": "Comma separated list of Telegram users IDs, which are authorized to send messages to the bot. This is a security restriction. You could find your telegram user ID by sending command /start to @userinfobot."
+          "description": "Comma separated list of Telegram users IDs, which are authorized to send messages to the bot. This is a security restriction. You could find your telegram user ID by sending command /start to @userinfobot.",
+          "scope": "machine"
         },
         "llama-vscode.telegram_chunk_size": {
           "type": "number",
           "default": 250,
-          "description": "The size of the chunks (in chars), which are sent as AI response to Telegram. Each chunk is a separate message."
+          "description": "The size of the chunks (in chars), which are sent as AI response to Telegram. Each chunk is a separate message.",
+          "scope": "machine"
         },
         "llama-vscode.tools_permission_timeout": {
           "type": "number",
