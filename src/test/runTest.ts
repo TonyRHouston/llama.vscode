@@ -13,7 +13,11 @@ async function main() {
             launchArgs: [
                 '--disable-extensions',
                 '--skip-welcome',
-                '--skip-release-notes'
+                '--skip-release-notes',
+                // No display (CI, SSH, containers): Chromium's headless Ozone platform runs the
+                // suite without an X server or xvfb.
+                ...(process.platform === 'linux' && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY
+                    ? ['--ozone-platform=headless', '--disable-gpu'] : [])
             ]
         });
     } catch (err) {
