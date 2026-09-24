@@ -6,6 +6,9 @@
 // renders every value with textContent; every webview message is validated before it reaches the API.
 import * as vscode from 'vscode';
 import { randomBytes } from 'crypto';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 const KEY_SECRET = 'llama-vscode.modelwire.controlKey';
 const ALIAS = /^[\w.:@-]{1,80}$/;
@@ -40,8 +43,18 @@ export class ModelwirePanel implements vscode.WebviewViewProvider {
         return String(url?.globalValue ?? url?.defaultValue ?? 'http://127.0.0.1:4100').replace(/\/+$/, '');
     }
 
+    // The stored secret, else the key file modelwire itself writes (same machine and user as the bridge;
+    // the path is machine-scoped, so a workspace cannot point it elsewhere).
+    private async controlKey(): Promise<string | undefined> {
+        const stored = await this.context.secrets.get(KEY_SECRET);
+        if (stored) return stored;
+        const setting = vscode.workspace.getConfiguration('llama-vscode').inspect<string>('modelwire_control_key_file');
+        const file = String(setting?.globalValue ?? setting?.defaultValue ?? '~/.config/modelwire/control.key').replace(/^~(?=$|\/)/, os.homedir());
+        try { return fs.readFileSync(path.resolve(file), 'utf8').trim() || undefined; } catch { return undefined; }
+    }
+
     private async api(method: 'GET' | 'POST', path: string, body?: Json, timeoutMs = 15000): Promise<Json> {
-        const key = await this.context.secrets.get(KEY_SECRET);
+        const key = await this.controlKey();
         if (!key) throw new Error('No control key. Run "modelwire: Set Control Key" (get it with `mw control-key` on the modelwire host).');
         const res = await fetch(`${this.baseUrl()}/v1/control${path}`, {
             method,

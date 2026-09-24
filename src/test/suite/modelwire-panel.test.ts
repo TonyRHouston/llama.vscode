@@ -1,6 +1,9 @@
 /// <reference types="mocha" />
 import * as assert from 'assert';
 import * as http from 'http';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { suite, test, suiteSetup, suiteTeardown } from 'mocha';
 import { ModelwirePanel } from '../../modelwire-panel';
@@ -23,10 +26,12 @@ suite('modelwire panel', () => {
         await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
         url = `http://127.0.0.1:${(server.address() as any).port}`;
         await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_url', url, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_control_key_file', '/nonexistent/control.key', vscode.ConfigurationTarget.Global);
     });
     suiteTeardown(async () => {
         server.close();
         await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_url', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_control_key_file', undefined, vscode.ConfigurationTarget.Global);
     });
 
     const attach = (panel: ModelwirePanel) => {
@@ -58,6 +63,22 @@ suite('modelwire panel', () => {
         assert.strictEqual(posted[0].url, url);
         assert.strictEqual(posted[0].status.aliases[0].alias, 'gpt-oss:120b');
         assert.deepStrictEqual(seen.at(-1), { method: 'GET', path: '/v1/control/status', auth: 'Bearer test-key' });
+    });
+
+    test('with no stored key the panel falls back to the key file', async () => {
+        secrets.clear();
+        const file = path.join(os.tmpdir(), `mw-key-${process.pid}`);
+        fs.writeFileSync(file, 'test-key\n');
+        await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_control_key_file', file, vscode.ConfigurationTarget.Global);
+        try {
+            const panel = new ModelwirePanel(context);
+            const posted = attach(panel);
+            await panel.refresh(false);
+            assert.strictEqual(posted[0].type, 'status', JSON.stringify(posted[0]));
+        } finally {
+            await vscode.workspace.getConfiguration('llama-vscode').update('modelwire_control_key_file', '/nonexistent/control.key', vscode.ConfigurationTarget.Global);
+            fs.unlinkSync(file);
+        }
     });
 
     test('without a control key the panel explains how to get one and sends nothing', async () => {

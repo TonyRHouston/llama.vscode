@@ -1742,6 +1742,12 @@
           "default": "http://127.0.0.1:4100",
           "scope": "machine",
           "description": "Base URL of the modelwire bridge for the modelwire panel. Machine-scoped: workspace settings cannot change it. The control key is stored in VS Code's secret storage (command: modelwire: Set Control Key)."
+        },
+        "llama-vscode.modelwire_control_key_file": {
+          "type": "string",
+          "default": "~/.config/modelwire/control.key",
+          "scope": "machine",
+          "description": "Fallback for the modelwire panel's control key when none is stored with 'modelwire: Set Control Key': the key file modelwire writes on its own host. Machine-scoped."
         }
       }
     },
