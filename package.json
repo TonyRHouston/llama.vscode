@@ -1846,7 +1846,7 @@
     "glob": "^11.0.3",
     "mocha": "^11.3.0",
     "typescript": "^4.8.0",
-    "webpack": "^5.100.2",
+    "webpack": "^5.111.1",
     "webpack-cli": "^4.10.0"
   },
   "extensionDependencies": [
